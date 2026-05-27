@@ -1,0 +1,16 @@
+stages:
+  train:
+    cmd: python src/train.py --input data/raw/fruits.csv --models-dir models --reports-dir reports
+    deps:
+      - src/train.py
+      - data/raw/fruits.csv
+    outs:
+      - data/processed/fruits_clustered.csv
+      - models/kmeans_fruits.joblib
+      - models/scaler_fruits.joblib
+      - models/proxy_rf_for_shap.joblib
+      - reports/k_selection_metrics.csv
+      - reports/stability_metrics.csv
+      - reports/proxy_confusion_matrix.csv
+      - reports/proxy_classification_report.json
+      - reports/summary.json

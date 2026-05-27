@@ -1,0 +1,9 @@
+{
+  "best_k": 3,
+  "proxy_accuracy": 1.0,
+  "proxy_f1_macro": 1.0,
+  "proxy_f1_weighted": 1.0,
+  "stability_ari_mean": 1.0,
+  "stability_ari_min": 1.0,
+  "limitations": "SHAP explains the proxy model, not KMeans directly."
+}

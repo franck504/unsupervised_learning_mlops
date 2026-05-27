@@ -1,0 +1,62 @@
+**Feuille De Route (MLOps Zéro Coût Cloud + Auto-Retrain/Auto-Redeploy)**
+
+1. Cadrage du projet  
+- Définir objectif, scope, métriques de succès (clustering + XAI + déploiement).
+
+2. Initialisation du repo  
+- Structurer `unsupervised_learning_mlops/` (data, src, notebooks, models, reports, deployment).
+- Créer environnement Python local.
+
+3. Versionnement des données (DVC)  
+- `dvc init`, ajout du dataset, remote local gratuit.
+- Commit Git des fichiers `.dvc`, `dvc.yaml`, `dvc.lock`.
+
+4. Industrialisation entraînement  
+- Transformer le notebook en scripts `src/`:
+  - prétraitement
+  - clustering + sélection de `k`
+  - proxy model + SHAP
+  - export artefacts
+- Paramétrer exécution reproductible.
+
+5. Suivi d’expériences (MLflow local)  
+- Logger params, métriques (`silhouette`, `CH`, `DB`, `accuracy/F1 proxy`), artefacts (plots, modèles).
+
+6. Validation “pro”  
+- Fidélité proxy (accuracy/F1 + confusion matrix).
+- Stabilité clusters (multi-seeds + ARI).
+- Limite méthodologique explicitée (proxy-based SHAP).
+
+7. Pipeline DVC  
+- Définir `dvc.yaml` stages (prepare, train, evaluate, explain, package).
+- Vérifier `dvc repro` end-to-end.
+
+8. CI/CD automatisé (changement de data/code => retrain)  
+- Configurer GitHub Actions (ou GitLab CI) déclenché par `push` sur `main` et/ou PR merge.
+- Dans le workflow: `dvc pull` -> entraînement -> évaluation -> génération des artefacts modèles.
+- Conditions de sécurité: ne promouvoir/redéployer que si les métriques minimales sont validées.
+
+9. Déploiement Hugging Face Space (auto)  
+- Préparer app `predict_and_explain` + `requirements.txt`.
+- Le workflow CI commit/push automatiquement les nouveaux modèles vers le repo Space.
+- Hugging Face Spaces redéploie automatiquement à chaque commit reçu.
+
+10. Monitoring local (sans Slack)  
+- Sauvegarder logs d’inférence (inputs/predictions).
+- Générer rapport Evidently périodique (drift features/clusters).
+
+11. Documentation finale  
+- Guide d’installation, commandes run, structure projet.
+- Limites, bonnes pratiques, plan d’amélioration.
+- Documenter clairement les triggers CI/CD (quand retrain, quand redeploy, rollback).
+
+**Livrables attendus**
+1. Repo propre et reproductible (`Git + DVC + MLflow local`)  
+2. Modèles versionnés (`scaler`, `kmeans`, `proxy`)  
+3. Pipeline CI/CD fonctionnel (retrain + push modèles + redeploy Space)
+4. Space Hugging Face auto-mis à jour  
+5. Rapport technique avec validation et limites XAI  
+
+**Déclenchement cible validé**
+- Changement data (DVC meta / dataset) ou changement code entraînement => retrain auto.
+- Si métriques OK => publication modèles => commit vers Space => redeploy auto.

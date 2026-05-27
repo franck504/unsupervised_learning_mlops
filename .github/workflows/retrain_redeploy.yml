@@ -1,0 +1,52 @@
+name: Retrain and Redeploy
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "data/raw/**"
+      - "src/**"
+      - "dvc.yaml"
+      - "requirements.txt"
+      - ".github/workflows/retrain_redeploy.yml"
+  workflow_dispatch:
+
+jobs:
+  train-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Train
+        run: |
+          python src/train.py --input data/raw/fruits.csv --models-dir models --reports-dir reports
+
+      - name: Quality gate
+        run: |
+          python - <<'PY'
+          import json
+          s = json.load(open('reports/summary.json'))
+          print('Summary:', s)
+          assert s['proxy_accuracy'] >= 0.90, 'Proxy accuracy below threshold'
+          assert s['proxy_f1_macro'] >= 0.90, 'Proxy F1 macro below threshold'
+          assert s['stability_ari_mean'] >= 0.90, 'Cluster stability ARI mean below threshold'
+          PY
+
+      - name: Publish to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_REPO: ${{ secrets.HF_SPACE_REPO }}
+        run: |
+          bash scripts/publish_to_hf_space.sh
