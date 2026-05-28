@@ -1,5 +1,8 @@
 name: Retrain and Redeploy
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   push:
     branches: ["main"]
@@ -43,6 +46,15 @@ jobs:
           assert s['proxy_f1_macro'] >= 0.90, 'Proxy F1 macro below threshold'
           assert s['stability_ari_mean'] >= 0.90, 'Cluster stability ARI mean below threshold'
           PY
+
+      - name: Validate Hugging Face secrets
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_REPO: ${{ secrets.HF_SPACE_REPO }}
+        run: |
+          test -n "$HF_TOKEN" || (echo "HF_TOKEN secret is missing" && exit 1)
+          test -n "$HF_SPACE_REPO" || (echo "HF_SPACE_REPO secret is missing" && exit 1)
+          echo "Hugging Face secrets are configured"
 
       - name: Publish to Hugging Face Space
         env:
