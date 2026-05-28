@@ -22,7 +22,7 @@ from sklearn.metrics import (
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-
+#ok trigger wf
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--input", default="data/raw/fruits.csv")
