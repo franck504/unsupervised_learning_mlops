@@ -5,8 +5,10 @@ from pathlib import Path
 
 import joblib
 import mlflow
+import mlflow.sklearn
 import numpy as np
 import pandas as pd
+from mlflow.tracking import MlflowClient
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
@@ -22,7 +24,6 @@ from sklearn.metrics import (
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-#ok trigger wf
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--input", default="data/raw/fruits.csv")
@@ -34,12 +35,38 @@ def parse_args():
     p.add_argument("--k-max", type=int, default=10)
     p.add_argument("--test-size", type=float, default=0.2)
     p.add_argument("--random-state", type=int, default=42)
+    p.add_argument("--skip-model-registry", action="store_true")
     return p.parse_args()
 
 
 def ensure_dirs(*dirs):
     for d in dirs:
         Path(d).mkdir(parents=True, exist_ok=True)
+
+
+def log_registered_sklearn_model(model, artifact_path, registered_model_name):
+    try:
+        return mlflow.sklearn.log_model(
+            sk_model=model,
+            name=artifact_path,
+            registered_model_name=registered_model_name,
+        )
+    except TypeError:
+        return mlflow.sklearn.log_model(
+            sk_model=model,
+            artifact_path=artifact_path,
+            registered_model_name=registered_model_name,
+        )
+
+
+def set_latest_model_alias(model_name, alias="production"):
+    client = MlflowClient()
+    versions = client.search_model_versions(f"name = '{model_name}'")
+    if not versions:
+        return None
+    latest = max(versions, key=lambda version: int(version.version))
+    client.set_registered_model_alias(model_name, alias, latest.version)
+    return latest.version
 
 
 def main():
@@ -166,6 +193,13 @@ def main():
         ]:
             mlflow.log_artifact(artifact)
 
+        registry_versions = {}
+        if not args.skip_model_registry:
+            log_registered_sklearn_model(kmeans, "kmeans_model", "fruits-kmeans-clustering")
+            log_registered_sklearn_model(proxy, "proxy_rf_model", "fruits-proxy-rf-shap")
+            registry_versions["fruits-kmeans-clustering"] = set_latest_model_alias("fruits-kmeans-clustering")
+            registry_versions["fruits-proxy-rf-shap"] = set_latest_model_alias("fruits-proxy-rf-shap")
+
         summary = {
             "best_k": best_k,
             "proxy_accuracy": acc,
@@ -173,6 +207,7 @@ def main():
             "proxy_f1_weighted": f1_weighted,
             "stability_ari_mean": float(np.mean(ari_pairs)),
             "stability_ari_min": float(np.min(ari_pairs)),
+            "mlflow_registry_versions": registry_versions,
             "limitations": "SHAP explains the proxy model, not KMeans directly.",
         }
 

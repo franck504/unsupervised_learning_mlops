@@ -8,3 +8,4 @@ mlflow.db-*
 fruits_unsupervised_learning_xai/
 inference_logs/
 reports/monitoring/
+reports/evidently/

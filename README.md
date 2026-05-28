@@ -27,6 +27,30 @@ python src/train.py --input data/raw/fruits.csv --models-dir models --reports-di
 dvc repro
 ```
 
+## DVC remote local
+
+Le projet utilise un remote DVC local `localstore`.
+
+```bash
+dvc pull
+dvc repro
+dvc push
+```
+
+Dans cette version zero-cost, le remote est local au repo pour permettre la demonstration `dvc pull` dans GitHub Actions. Pour un usage production, remplacez-le par un remote cloud accessible par la CI.
+
+## MLflow Registry local
+
+L'entrainement enregistre les modeles dans le registry MLflow local (`mlflow.db`):
+- `fruits-kmeans-clustering`
+- `fruits-proxy-rf-shap`
+
+Pour ouvrir MLflow:
+
+```bash
+mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
+```
+
 ## Docker local
 
 ```bash
@@ -49,6 +73,21 @@ python scripts/monitor_drift.py \
 Sorties:
 - `reports/monitoring/drift_report.json`
 - `reports/monitoring/drift_report.html`
+
+## Monitoring Evidently AI
+
+Pour generer un rapport Evidently AI sur les donnees de production:
+
+```bash
+python scripts/monitor_evidently.py \
+  --reference data/processed/fruits_clustered.csv \
+  --production inference_logs/inferences.csv \
+  --reports-dir reports/evidently
+```
+
+Sorties:
+- `reports/evidently/evidently_data_drift_report.json`
+- `reports/evidently/evidently_data_drift_report.html`
 
 ## GitHub Secrets requis
 

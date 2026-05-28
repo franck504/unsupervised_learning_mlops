@@ -35,9 +35,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Train
+      - name: DVC pull
         run: |
-          python src/train.py --input data/raw/fruits.csv --models-dir models --reports-dir reports
+          dvc pull
+
+      - name: DVC reproduce pipeline
+        run: |
+          dvc repro
 
       - name: Quality gate
         run: |

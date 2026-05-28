@@ -1,0 +1,51 @@
+schema: '2.0'
+stages:
+  train:
+    cmd: python src/train.py --input data/raw/fruits.csv --models-dir models 
+      --reports-dir reports
+    deps:
+    - path: data/raw/fruits.csv
+      hash: md5
+      md5: bd1b09e313ccb655337f2dcb5bf3242f
+      size: 4972
+    - path: src/train.py
+      hash: md5
+      md5: 9e30654f7c536ce58efc71be3243840b
+      size: 8380
+    outs:
+    - path: data/processed/fruits_clustered.csv
+      hash: md5
+      md5: edf519dfebb6ebe3d094620f971106a4
+      size: 5383
+    - path: models/kmeans_fruits.joblib
+      hash: md5
+      md5: 09da46e42f000a5fcf959033a0a63561
+      size: 2375
+    - path: models/proxy_rf_for_shap.joblib
+      hash: md5
+      md5: 9f4463d2824ff895a6350bf46295452c
+      size: 320737
+    - path: models/scaler_fruits.joblib
+      hash: md5
+      md5: 1fdf68ef39ebcb8342be174a0b5db024
+      size: 935
+    - path: reports/k_selection_metrics.csv
+      hash: md5
+      md5: 337834c7374a4a4fd63e8aa92d6e4abe
+      size: 569
+    - path: reports/proxy_classification_report.json
+      hash: md5
+      md5: 66f0ceea1b92293711e35fa41e67c88e
+      size: 520
+    - path: reports/proxy_confusion_matrix.csv
+      hash: md5
+      md5: 04a94e8051527d376a22fc9e2b6017a9
+      size: 27
+    - path: reports/stability_metrics.csv
+      hash: md5
+      md5: 622f4b2150934eb6b2d4053699cbdbff
+      size: 465
+    - path: reports/summary.json
+      hash: md5
+      md5: fd5e6a04e77b76139d587b12189652e3
+      size: 326
