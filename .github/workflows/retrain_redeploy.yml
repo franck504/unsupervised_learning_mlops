@@ -2,6 +2,7 @@ name: Retrain and Redeploy
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  HF_SPACE_NAME: "Franck504/fruits_unsupervised_learning_xai"
 
 on:
   push:
