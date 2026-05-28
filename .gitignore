@@ -6,3 +6,5 @@ mlflow.db
 mlflow.db-*
 .dvc/cache/
 fruits_unsupervised_learning_xai/
+inference_logs/
+reports/monitoring/

@@ -10,6 +10,8 @@ on:
     paths:
       - "data/raw/**"
       - "src/**"
+      - "deployment/**"
+      - "scripts/publish_to_hf_space.sh"
       - "dvc.yaml"
       - "requirements.txt"
       - ".github/workflows/retrain_redeploy.yml"
