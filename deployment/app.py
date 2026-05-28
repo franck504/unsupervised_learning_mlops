@@ -87,17 +87,30 @@ def predict_and_explain(feature_1: float, feature_2: float):
     }
 
 
+def get_inference_log():
+    if not os.path.exists(LOG_PATH):
+        return None
+    return LOG_PATH
+
+
 with gr.Blocks(title="Fruits USL XAI") as demo:
     gr.Markdown("# Fruits Unsupervised Learning & XAI")
     with gr.Row():
         f1 = gr.Number(label="feature_1", value=25.0)
         f2 = gr.Number(label="feature_2", value=8.5)
     out = gr.JSON(label="Resultat")
+    log_file = gr.File(label="Inference log CSV")
     gr.Button("Predict and Explain").click(
         fn=predict_and_explain,
         inputs=[f1, f2],
         outputs=out,
         api_name="predict_and_explain",
+    )
+    gr.Button("Download inference logs").click(
+        fn=get_inference_log,
+        inputs=[],
+        outputs=log_file,
+        api_name="download_inference_logs",
     )
 
 if __name__ == "__main__":
