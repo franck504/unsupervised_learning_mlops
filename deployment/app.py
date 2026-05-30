@@ -109,25 +109,81 @@ def get_inference_log():
     return LOG_PATH
 
 
+def format_result_as_table(out_json_dict):
+    """Convertit le dictionnaire JSON en DataFrame pour affichage en table"""
+    result_data = {
+        "Propriété": [],
+        "Valeur": []
+    }
+    
+    result_data["Propriété"].append("ID de requête")
+    result_data["Valeur"].append(out_json_dict["request_id"])
+    
+    result_data["Propriété"].append("Cluster prédit")
+    result_data["Valeur"].append(out_json_dict["cluster"])
+    
+    result_data["Propriété"].append("Caractéristique 1 (input)")
+    result_data["Valeur"].append(f"{out_json_dict['input']['feature_1']}")
+    
+    result_data["Propriété"].append("Caractéristique 2 (input)")
+    result_data["Valeur"].append(f"{out_json_dict['input']['feature_2']}")
+    
+    result_data["Propriété"].append("Explication Feature 1")
+    result_data["Valeur"].append(f"{out_json_dict['explanation']['feature_1']:.3f}")
+    
+    result_data["Propriété"].append("Explication Feature 2")
+    result_data["Valeur"].append(f"{out_json_dict['explanation']['feature_2']:.3f}")
+    
+    return pd.DataFrame(result_data)
+
+
 with gr.Blocks(title="Fruits - Apprentissage Non Supervisé & XAI") as demo:
     gr.Markdown("# 🍎 Fruits - Apprentissage Non Supervisé & XAI")
+    
+    # Ligne d'entrée des features
     with gr.Row():
-        with gr.Column(scale=2):
-            f1 = gr.Number(label="Caractéristique 1", value=25.0)
-            f2 = gr.Number(label="Caractéristique 2", value=8.5)
-            predict_btn = gr.Button("🔮 Prédire et Expliquer")
-            dl_btn = gr.Button("📥 Télécharger les journaux")
-        with gr.Column(scale=3):
-            cluster_info = gr.Markdown(value=f"🔍 **Clusters découverts:** {getattr(kmeans, 'n_clusters', 'N/A')}")
-            out_json = gr.JSON(label="Résultat (JSON)")
-            out_text = gr.Markdown(label="Explication (texte)")
-            log_file = gr.File(label="Journaux d'inférence (CSV)")
+        f1 = gr.Number(label="Caractéristique 1", value=25.0)
+        f2 = gr.Number(label="Caractéristique 2", value=8.5)
+    
+    # Ligne des boutons
+    with gr.Row():
+        predict_btn = gr.Button("🔮 Prédire et Expliquer")
+        dl_btn = gr.Button("📥 Télécharger les journaux")
+    
+    # Ligne d'info clusters
+    with gr.Row():
+        cluster_info = gr.Markdown(value=f"🔍 **Clusters découverts:** {getattr(kmeans, 'n_clusters', 'N/A')}")
+    
+    # Ligne de la table résultat
+    with gr.Row():
+        result_table = gr.Dataframe(
+            label="Résultat (Table)",
+            interactive=False,
+            wrap=True
+        )
+    
+    # Ligne de l'explication texte
+    with gr.Row():
+        out_text = gr.Markdown(label="Explication détaillée")
+    
+    # Ligne du fichier de téléchargement
+    with gr.Row():
+        log_file = gr.File(label="Journaux d'inférence (CSV)")
+    
+    # État caché pour stocker le JSON complet
+    out_json = gr.JSON(visible=False)
+
+    def predict_wrapper(feature_1, feature_2):
+        """Wrapper pour retourner les résultats dans le bon format"""
+        json_result, explanation_text, cluster_info_md = predict_and_explain(feature_1, feature_2)
+        table_result = format_result_as_table(json_result)
+        return json_result, table_result, explanation_text, cluster_info_md
 
     # Wire buttons: keep API-compatible JSON output, and provide a readable text explanation
     predict_btn.click(
-        fn=predict_and_explain,
+        fn=predict_wrapper,
         inputs=[f1, f2],
-        outputs=[out_json, out_text, cluster_info],
+        outputs=[out_json, result_table, out_text, cluster_info],
         api_name="predict_and_explain",
     )
 
