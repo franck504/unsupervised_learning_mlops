@@ -79,13 +79,13 @@ def predict_and_explain(feature_1: float, feature_2: float):
     explanation = {feature_names[i]: float(one_class[i]) for i in range(len(feature_names))}
     log_inference(request_id, feature_1, feature_2, cluster, explanation)
 
-    # Human-readable SHAP explanation (text)
-    lines = [f"Cluster prédit: {cluster}"]
+    # Human-readable SHAP explanation (text) - line by line
+    lines = [f"**Cluster prédit: {cluster}**\n"]
     for name, val in explanation.items():
         sign = "+" if val >= 0 else ""
         direction = "pousse vers le cluster" if val >= 0 else "pousse contre le cluster"
-        lines.append(f"- {name}: {sign}{val:.3f} ({direction})")
-    explanation_text = "\n".join(lines)
+        lines.append(f"**{name}:** {sign}{val:.3f}  \n*{direction}*\n")
+    explanation_text = "".join(lines)
 
     # Cluster count from KMeans model (if available)
     cluster_count = getattr(kmeans, "n_clusters", None)
@@ -99,7 +99,7 @@ def predict_and_explain(feature_1: float, feature_2: float):
         "explanation_text": explanation_text,
         "cluster_count": int(cluster_count) if cluster_count is not None else None,
     }
-    cluster_info_md = f"**Clusters entraînés:** {cluster_count if cluster_count else 'N/A'}"
+    cluster_info_md = f"🔍 **Clusters découverts:** {cluster_count if cluster_count else 'N/A'}"
     return out_json_dict, explanation_text, cluster_info_md
 
 
@@ -109,19 +109,19 @@ def get_inference_log():
     return LOG_PATH
 
 
-with gr.Blocks(title="Fruits USL XAI") as demo:
-    gr.Markdown("# Fruits Unsupervised Learning & XAI")
+with gr.Blocks(title="Fruits - Apprentissage Non Supervisé & XAI") as demo:
+    gr.Markdown("# 🍎 Fruits - Apprentissage Non Supervisé & XAI")
     with gr.Row():
         with gr.Column(scale=2):
-            f1 = gr.Number(label="feature_1", value=25.0)
-            f2 = gr.Number(label="feature_2", value=8.5)
-            predict_btn = gr.Button("Predict and Explain")
-            dl_btn = gr.Button("Download inference logs")
+            f1 = gr.Number(label="Caractéristique 1", value=25.0)
+            f2 = gr.Number(label="Caractéristique 2", value=8.5)
+            predict_btn = gr.Button("🔮 Prédire et Expliquer")
+            dl_btn = gr.Button("📥 Télécharger les journaux")
         with gr.Column(scale=3):
-            cluster_info = gr.Markdown(value=f"**Clusters entraînés :** {getattr(kmeans, 'n_clusters', 'N/A')}")
+            cluster_info = gr.Markdown(value=f"🔍 **Clusters découverts:** {getattr(kmeans, 'n_clusters', 'N/A')}")
             out_json = gr.JSON(label="Résultat (JSON)")
             out_text = gr.Markdown(label="Explication (texte)")
-            log_file = gr.File(label="Inference log CSV")
+            log_file = gr.File(label="Journaux d'inférence (CSV)")
 
     # Wire buttons: keep API-compatible JSON output, and provide a readable text explanation
     predict_btn.click(
