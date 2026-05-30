@@ -79,11 +79,24 @@ def predict_and_explain(feature_1: float, feature_2: float):
     explanation = {feature_names[i]: float(one_class[i]) for i in range(len(feature_names))}
     log_inference(request_id, feature_1, feature_2, cluster, explanation)
 
+    # Human-readable SHAP explanation (text)
+    lines = [f"Cluster prédit: {cluster}"]
+    for name, val in explanation.items():
+        sign = "+" if val >= 0 else ""
+        direction = "pousse vers le cluster" if val >= 0 else "pousse contre le cluster"
+        lines.append(f"- {name}: {sign}{val:.3f} ({direction})")
+    explanation_text = "\n".join(lines)
+
+    # Cluster count from KMeans model (if available)
+    cluster_count = getattr(kmeans, "n_clusters", None)
+
     return {
         "request_id": request_id,
         "cluster": cluster,
         "input": {"feature_1": feature_1, "feature_2": feature_2},
         "explanation": explanation,
+        "explanation_text": explanation_text,
+        "cluster_count": int(cluster_count) if cluster_count is not None else None,
     }
 
 
@@ -93,20 +106,29 @@ def get_inference_log():
     return LOG_PATH
 
 
-with gr.Blocks(title="Fruits USL XAI") as demo:
+with gr.Blocks(title="Fruits USL XAI", css=".gr-row{gap:12px}") as demo:
     gr.Markdown("# Fruits Unsupervised Learning & XAI")
     with gr.Row():
-        f1 = gr.Number(label="feature_1", value=25.0)
-        f2 = gr.Number(label="feature_2", value=8.5)
-    out = gr.JSON(label="Resultat")
-    log_file = gr.File(label="Inference log CSV")
-    gr.Button("Predict and Explain").click(
+        with gr.Column(scale=2):
+            f1 = gr.Number(label="feature_1", value=25.0)
+            f2 = gr.Number(label="feature_2", value=8.5)
+            predict_btn = gr.Button("Predict and Explain")
+            dl_btn = gr.Button("Download inference logs")
+        with gr.Column(scale=3):
+            cluster_info = gr.Markdown(value=f"**Clusters entraînés :** {getattr(kmeans, 'n_clusters', 'N/A')}")
+            out_json = gr.JSON(label="Résultat (JSON)")
+            out_text = gr.Markdown(label="Explication (texte)")
+            log_file = gr.File(label="Inference log CSV")
+
+    # Wire buttons: keep API-compatible JSON output, and provide a readable text explanation
+    predict_btn.click(
         fn=predict_and_explain,
         inputs=[f1, f2],
-        outputs=out,
+        outputs=[out_json, out_text, cluster_info],
         api_name="predict_and_explain",
     )
-    gr.Button("Download inference logs").click(
+
+    dl_btn.click(
         fn=get_inference_log,
         inputs=[],
         outputs=log_file,
@@ -114,4 +136,5 @@ with gr.Blocks(title="Fruits USL XAI") as demo:
     )
 
 if __name__ == "__main__":
-    demo.launch(ssr_mode=False)
+    # On HF Spaces this will be served by the platform. For local testing:
+    demo.launch(server_name="0.0.0.0", share=False, ssr=False)
