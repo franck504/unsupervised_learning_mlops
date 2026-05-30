@@ -8,6 +8,8 @@ Segmenter automatiquement des observations (2 features numériques) en clusters,
 
 ## Architecture Générale
 
+![Architecture générale](assets/architecture.svg)
+
 🔧 Ce que vous devez savoir pour améliorer le projet
 
 1. Pipeline d'Entraînement (`src/train.py`)
