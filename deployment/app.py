@@ -90,7 +90,8 @@ def predict_and_explain(feature_1: float, feature_2: float):
     # Cluster count from KMeans model (if available)
     cluster_count = getattr(kmeans, "n_clusters", None)
 
-    return {
+    # Return values for Gradio outputs: out_json, out_text, cluster_info
+    out_json_dict = {
         "request_id": request_id,
         "cluster": cluster,
         "input": {"feature_1": feature_1, "feature_2": feature_2},
@@ -98,6 +99,8 @@ def predict_and_explain(feature_1: float, feature_2: float):
         "explanation_text": explanation_text,
         "cluster_count": int(cluster_count) if cluster_count is not None else None,
     }
+    cluster_info_md = f"**Clusters entraînés:** {cluster_count if cluster_count else 'N/A'}"
+    return out_json_dict, explanation_text, cluster_info_md
 
 
 def get_inference_log():
@@ -106,7 +109,7 @@ def get_inference_log():
     return LOG_PATH
 
 
-with gr.Blocks(title="Fruits USL XAI", css=".gr-row{gap:12px}") as demo:
+with gr.Blocks(title="Fruits USL XAI") as demo:
     gr.Markdown("# Fruits Unsupervised Learning & XAI")
     with gr.Row():
         with gr.Column(scale=2):
@@ -137,4 +140,4 @@ with gr.Blocks(title="Fruits USL XAI", css=".gr-row{gap:12px}") as demo:
 
 if __name__ == "__main__":
     # On HF Spaces this will be served by the platform. For local testing:
-    demo.launch(server_name="0.0.0.0", share=False, ssr=False)
+    demo.launch(server_name="0.0.0.0", share=False, css=".gr-row{gap:12px}")
